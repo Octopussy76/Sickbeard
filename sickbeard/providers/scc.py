@@ -37,6 +37,7 @@ from lib import requests
 from bs4 import BeautifulSoup
 from lib.unidecode import unidecode
 
+
 class SCCProvider(generic.TorrentProvider):
 
     urls = {'base_url' : 'https://sceneaccess.eu',
@@ -161,7 +162,7 @@ class SCCProvider(generic.TorrentProvider):
 
                 if mode == 'Season':
                     searchURL = self.urls['archive'] % (search_string)
-                    data = self.getURL(searchURL)
+                    data = [self.getURL(searchURL)]
                 else:
                     searchURL = self.urls['search'] % (search_string, self.categories)
                     nonsceneSearchURL = self.urls['nonscene'] % (search_string)
@@ -214,7 +215,7 @@ class SCCProvider(generic.TorrentProvider):
 
                             item = title, download_url, id, seeders, leechers
 
-                            if re.search('<title>SceneAccess \| Non-Scene</title>', dataItem):
+                            if re.search('<title>SceneAccess \| Foreign</title>', dataItem):
                                 logger.log(u"Found result: " + title + "(" + nonsceneSearchURL + ")", logger.DEBUG)
                             else:
                                 logger.log(u"Found result: " + title + "(" + searchURL + ")", logger.DEBUG)
