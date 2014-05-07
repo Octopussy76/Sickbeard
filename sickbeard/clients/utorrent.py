@@ -63,7 +63,13 @@ class uTorrentAPI(GenericClient):
                   'v':sickbeard.TORRENT_LABEL
                   }
         return self._request(params=params)
-    
+
+    def _set_torrent_priority(self, result):
+
+        if result.priority == 1:
+            params = {'action': 'queuetop', 'hash': result.hash}
+            return self._request(params=params)
+
     def _set_torrent_pause(self, result):
 
         if sickbeard.TORRENT_PAUSED:

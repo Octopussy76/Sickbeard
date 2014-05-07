@@ -1336,7 +1336,7 @@ class ConfigProviders:
         else:
 
             newProvider = rsstorrent.TorrentRssProvider(name, url)
-            sickbeard.TorrentRssProviderList.append(newProvider)
+            sickbeard.torrentRssProviderList.append(newProvider)
             return newProvider.getID() + '|' + newProvider.configStr()
 
     @cherrypy.expose
@@ -2555,7 +2555,7 @@ class Home:
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
 
         mydb = db.DBConnection()
-        rows = mydb.select("SELECT show_id, show_name, notify_list FROM tv_shows")
+        rows = mydb.select("SELECT show_id, show_name, notify_list FROM tv_shows ORDER BY show_name ASC")
         data = {}
         size = 0
         for r in rows:
@@ -3051,15 +3051,22 @@ class Home:
                 if epObj == None:
                     return _genericMessage("Error", "Episode couldn't be retrieved")
 
-                if int(status) in (WANTED, FAILED):
+                if int(status) == WANTED:
                     # figure out what episodes are wanted so we can backlog them
                     if epObj.show.air_by_date:
-                        wanted_segments.append(str(epObj.airdate)[:7])
+                        segment = str(epObj.airdate)[:7]
                     else:
-                        wanted_segments.append(epObj.season)
+                        segment = epObj.season
 
+                    if segment not in wanted_segments:
+                        wanted_segments.append(segment)
+
+                elif int(status) == FAILED:
                     # figure out what episodes failed so we can retry them
-                    failed_segments.setdefault(epObj.season,[]).append(epObj.episode)
+                    if epObj.season not in failed_segments:
+                        failed_segments[epObj.season] = []
+                    if epObj.episode not in failed_segments[epObj.season]:
+                        failed_segments[epObj.season].append(epObj.episode)
 
                 with epObj.lock:
                     # don't let them mess up UNAIRED episodes
@@ -3514,25 +3521,33 @@ class WebInterface:
         future_date = (datetime.date.today() + datetime.timedelta(weeks=52)).toordinal()
 
         # Get all the shows that are not paused
-        calendar_shows = myDB.select("SELECT show_name, tvdb_id, network, airs, runtime FROM tv_shows WHERE paused != '1'")
+        calendar_shows = myDB.select("SELECT show_name, tvdb_id, network, airs, runtime FROM tv_shows WHERE ( status = 'Continuing' OR status = 'Returning Series' ) AND paused != '1'")
         for show in calendar_shows:
             # Get all episodes of this show airing between today and next month
             episode_list = myDB.select("SELECT tvdbid, name, season, episode, description, airdate FROM tv_episodes WHERE airdate >= ? AND airdate < ? AND showid = ?", (past_date, future_date, int(show["tvdb_id"])))
 
+            utc = tz.gettz('GMT')
+
             for episode in episode_list:
 
-                air_date_time = network_timezones.parse_date_time(episode['airdate'], show["airs"], show['network'])
-        
+                air_date_time = network_timezones.parse_date_time(episode['airdate'], show["airs"], show['network']).astimezone(utc)
+                air_date_time_end = air_date_time + datetime.timedelta(minutes=helpers.tryInt(show["runtime"],60))
+
                 # Create event for episode
                 ical = ical + 'BEGIN:VEVENT\r\n'
-                ical = ical + 'DTSTART;VALUE=DATE:' + str(air_date_time.date()).replace("-", "") + '\r\n'
+                ical = ical + 'DTSTART:' + air_date_time.strftime("%Y%m%d") + 'T' + air_date_time.strftime("%H%M%S") + 'Z\r\n'
+                ical = ical + 'DTEND:' + air_date_time_end.strftime("%Y%m%d") + 'T' + air_date_time_end.strftime("%H%M%S") + 'Z\r\n'
                 ical = ical + 'SUMMARY:' + show['show_name'] + ': ' + episode['name'] + '\r\n'
-                ical = ical + 'UID:Sick-Beard-' + str(datetime.date.today().isoformat()) + '-' + show['show_name'].replace(" ", "-") + '-E' + str(episode['episode']) + 'S' + str(episode['season']) + '\r\n'
-                if (episode['description'] != ''):
-                    ical = ical + 'DESCRIPTION:' + show['airs'] + ' on ' + show['network'] + '\\n\\n' + episode['description'].splitlines()[0] + '\r\n'
+                ical = ical + 'UID:Sick-Beard-' + str(datetime.date.today().isoformat()) + '-' + show[
+                    'show_name'].replace(" ", "-") + '-E' + str(episode['episode']) + 'S' + str(
+                    episode['season']) + '\r\n'
+                if (episode['description'] is not None and episode['description'] != ''):
+                    ical = ical + 'DESCRIPTION:' + show['airs'] + ' on ' + show['network'] + '\\n\\n' + \
+                           episode['description'].splitlines()[0] + '\r\n'
                 else:
                     ical = ical + 'DESCRIPTION:' + show['airs'] + ' on ' + show['network'] + '\r\n'
-                ical = ical + 'LOCATION:' + 'Episode ' + str(episode['episode']) + ' - Season ' + str(episode['season']) + '\r\n'
+                ical = ical + 'LOCATION:' + 'Episode ' + str(episode['episode']) + ' - Season ' + str(
+                    episode['season']) + '\r\n'
                 ical = ical + 'END:VEVENT\r\n'
 
         # Ending the iCal
