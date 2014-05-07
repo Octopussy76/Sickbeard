@@ -112,7 +112,11 @@ class PLEXNotifier:
 
         # fill in omitted parameters
         if not host:
-            host = sickbeard.PLEX_HOST
+            if sickbeard.PLEX_HOST:
+                host = sickbeard.PLEX_HOST
+            else:
+                logger.log(u"No Plex host specified, check your settings", logger.DEBUG)
+                return False
         if not username:
             username = sickbeard.PLEX_USERNAME
         if not password:
