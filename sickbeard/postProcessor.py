@@ -213,8 +213,8 @@ class PostProcessor(object):
 
         # delete the file and any other files which we want to delete
         for cur_file in file_list:
-            self._log(u"Deleting file " + cur_file, logger.DEBUG)
             if ek.ek(os.path.isfile, cur_file):
+                self._log(u"Deleting file " + cur_file, logger.DEBUG)
                 #check first the read-only attribute
                 file_attribute = ek.ek(os.stat, cur_file)[0]
                 if (not file_attribute & stat.S_IWRITE):
@@ -414,13 +414,6 @@ class PostProcessor(object):
             self.in_history = True
             to_return = (tvdb_id, season, [])
             self._log("Found result in history: " + str(to_return), logger.DEBUG)
-
-            if curName == self.nzb_name:
-                self.good_results[self.NZB_NAME] = True
-            elif curName == self.folder_name:
-                self.good_results[self.FOLDER_NAME] = True
-            elif curName == self.file_name:
-                self.good_results[self.FILE_NAME] = True
 
             return to_return
 
@@ -851,7 +844,14 @@ class PostProcessor(object):
                 return False
             elif existing_file_status == PostProcessor.EXISTS_SMALLER:
                 self._log(u"File exists and is smaller than the new file so I'm going to replace it", logger.DEBUG)
-            elif existing_file_status != PostProcessor.DOESNT_EXIST:
+            elif existing_file_status == PostProcessor.DOESNT_EXIST:
+                if not ek.ek(os.path.isdir, ep_obj.show._location) and not sickbeard.CREATE_MISSING_SHOW_DIRS:
+                    self._log(u"File and Show location doesn't exist so I'm not replacing it", logger.DEBUG)
+                    return False
+                else:
+                    self._log(u"File doesn't exist so I'm going to replace it", logger.DEBUG)
+                    return True
+            else:
                 self._log(u"Unknown existing file status. This should never happen, please log this as a bug.", logger.ERROR)
                 return False
 
@@ -884,46 +884,48 @@ class PostProcessor(object):
 
         # update the ep info before we rename so the quality & release name go into the name properly
         for cur_ep in [ep_obj] + ep_obj.relatedEps:
-            with cur_ep.lock:
-                cur_release_name = None
+            cur_release_name = None
 
-                # use the best possible representation of the release name
-                if self.good_results[self.NZB_NAME]:
-                    cur_release_name = self.nzb_name
-                    if cur_release_name.lower().endswith('.nzb'):
-                        cur_release_name = cur_release_name.rpartition('.')[0]
-                elif self.good_results[self.FOLDER_NAME]:
-                    cur_release_name = self.folder_name
-                elif self.good_results[self.FILE_NAME]:
-                    cur_release_name = self.file_name
-                    # take the extension off the filename, it's not needed
-                    if '.' in self.file_name:
-                        cur_release_name = self.file_name.rpartition('.')[0]
+            # use the best possible representation of the release name
+            if self.good_results[self.NZB_NAME]:
+                cur_release_name = self.nzb_name
+                if cur_release_name.lower().endswith('.nzb'):
+                    cur_release_name = cur_release_name.rpartition('.')[0]
 
-                if cur_release_name:
-                    self._log("Found release name " + cur_release_name, logger.DEBUG)
-                    cur_ep.release_name = cur_release_name
-                else:
-                    logger.log("good results: " + repr(self.good_results), logger.DEBUG)
+            elif self.good_results[self.FILE_NAME]:
+                cur_release_name = self.file_name
+                # take the extension off the filename, it's not needed
+                if '.' in self.file_name:
+                    cur_release_name = self.file_name.rpartition('.')[0]
 
-                cur_ep.status = common.Quality.compositeStatus(common.DOWNLOADED, new_ep_quality)
+            elif self.good_results[self.FOLDER_NAME]:
+                cur_release_name = self.folder_name
 
-                cur_ep.subtitles = []
+            if cur_release_name:
+                self._log("Found release name " + cur_release_name, logger.DEBUG)
+                cur_ep.release_name = cur_release_name
+            else:
+                logger.log(u"good results: " + repr(self.good_results), logger.DEBUG)
+                cur_ep.release_name = ""
 
-                cur_ep.subtitles_searchcount = 0
+            cur_ep.status = common.Quality.compositeStatus(common.DOWNLOADED, new_ep_quality)
 
-                cur_ep.subtitles_lastsearch = '0001-01-01 00:00:00'
+            cur_ep.subtitles = []
 
-                cur_ep.is_proper = self.is_proper
+            cur_ep.subtitles_searchcount = 0
 
-                cur_ep.saveToDB()
+            cur_ep.subtitles_lastsearch = '0001-01-01 00:00:00'
 
-                # Just want to keep this consistent for failed handling right now
-                releaseName = show_name_helpers.determineReleaseName(self.folder_path, self.nzb_name)
-                if releaseName is not None:
-                    failed_history.logSuccess(releaseName)
-                else:
-                    self._log(u"Couldn't find release in snatch history", logger.WARNING)
+            cur_ep.is_proper = self.is_proper
+
+            cur_ep.saveToDB()
+
+            # Just want to keep this consistent for failed handling right now
+            releaseName = show_name_helpers.determineReleaseName(self.folder_path, self.nzb_name)
+            if releaseName is not None:
+                failed_history.logSuccess(releaseName)
+            else:
+                self._log(u"Couldn't find release in snatch history", logger.WARNING)
 
         # find the destination folder
         try:
