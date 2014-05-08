@@ -187,9 +187,9 @@ $(document).ready(function () {
         // also toggle the add show button
         if (($("#rootDirs option:selected").length || ($('#fullShowPath').length && $('#fullShowPath').val().length)) &&
             ($('input:radio[name=whichSeries]:checked').length) || ($('input:hidden[name=whichSeries]').length && $('input:hidden[name=whichSeries]').val().length)) {
-            $('#addShowButton').attr('disabled', false);
+            $('#addShowButton').prop('disabled', false);
         } else {
-            $('#addShowButton').attr('disabled', true);
+           $('#addShowButton').prop('disabled', true);
         }
     }
 

@@ -33,7 +33,7 @@ $(document).ready(function() {
         if (!$('#whichDefaultRootDir').val().length)
             is_default = true;
 
-        $('#rootDirs').append('<option value="'+path+'">'+path+'</option>');
+        $('#rootDirs').append('<option value="' + path + '">' + path + '</option>');
 
         syncOptionIDs();
 

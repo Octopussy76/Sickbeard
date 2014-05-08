@@ -14,13 +14,23 @@ $(document).ready(function(){
         $(this).val('jump');
     });
 
-    $("#prevShow").click(function(){
-        $('#pickShow option:selected').prev('option').attr('selected', 'selected');
+    $("#prevShow").click(function() {
+        var show = $('#pickShow option:selected');
+        if (show.prev('option').length < 1){
+            show.parent().children('option:last').prop('selected', true);
+        } else{
+            show.prev('option').prop('selected', true);
+        }
         $("#pickShow").change();
     });
 
-    $("#nextShow").click(function(){
-        $('#pickShow option:selected').next('option').attr('selected', 'selected');
+    $("#nextShow").click(function() {
+        var show = $('#pickShow option:selected');
+        if (show.next('option').length < 1) {
+            show.parent().children('option:first').prop('selected', true);
+        } else{
+            show.next('option').prop('selected', true);
+        }
         $("#pickShow").change();
     });
 
@@ -102,11 +112,12 @@ $(document).ready(function(){
     });
 
     // handle the show selection dropbox
-    $('#pickShow').change(function(){
-        var sbRoot = $('#sbRoot').val()
-        var val = $(this).attr('value')
-        if (val == 0)
+    $('#pickShow').change(function() {
+        var sbRoot = $('#sbRoot').val();
+        var val = $(this).val();
+        if (val == 0) {
             return
+        }
         url = sbRoot+'/home/displayShow?show='+val
         window.location.href = url
     });

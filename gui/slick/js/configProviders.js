@@ -119,18 +119,18 @@ $(document).ready(function(){
         $('#newznab_key').val(data[2]);
 
         if (selectedProvider == 'addNewznab') {
-            $('#newznab_name').removeAttr("disabled");
-            $('#newznab_url').removeAttr("disabled");
+            $('#newznab_name').prop("disabled", false);
+            $('#newznab_url').prop("disabled", false);
         } else {
 
-            $('#newznab_name').attr("disabled", "disabled");
+            $('#newznab_name').prop("disabled", true);
 
             if (isDefault) {
-                $('#newznab_url').attr("disabled", "disabled");
-                $('#newznab_delete').attr("disabled", "disabled");
+                $('#newznab_url').prop("disabled", true);
+                $('#newznab_delete').prop("disabled", true);
             } else {
-                $('#newznab_url').removeAttr("disabled");
-                $('#newznab_delete').removeAttr("disabled");
+                $('#newznab_url').prop("disabled", false);
+                $('#newznab_delete').prop("disabled", false);
             }
         }
 
@@ -168,16 +168,16 @@ $(document).ready(function(){
         $('#torrentrss_passw').val(data[3]);
 
         if (selectedProvider == 'addTorrentRss') {
-            $('#torrentrss_name').removeAttr("disabled");
-            $('#torrentrss_url').removeAttr("disabled");
-            $('#torrentrss_uname').removeAttr("disabled");
-            $('#torrentrss_passw').removeAttr("disabled");
+            $('#torrentrss_name').prop("disabled", false);
+            $('#torrentrss_url').prop("disabled", false);
+            $('#torrentrss_uname').prop("disabled", false);
+            $('#torrentrss_passw').prop("disabled", false);
         } else {
-            $('#torrentrss_name').attr("disabled", "disabled");
-            $('#torrentrss_url').removeAttr("disabled");
-            $('#torrentrss_uname').removeAttr("disabled");
-            $('#torrentrss_passw').removeAttr("disabled")
-            $('#torrentrss_delete').removeAttr("disabled");
+            $('#torrentrss_name').prop("disabled", true);
+            $('#torrentrss_url').prop("disabled", false);
+            $('#torrentrss_uname').prop("disabled", false);
+            $('#torrentrss_passw').prop("disabled", false);
+            $('#torrentrss_delete').prop("disabled", false);
         }
 
     }
@@ -329,23 +329,23 @@ $(document).ready(function(){
     });
 
 
-    $('#editAProvider').change(function(){
+    $('#editAProvider').change(function() {
         $(this).showHideProviders();
     });
 
-    $('#editANewznabProvider').change(function(){
+    $('#editANewznabProvider').change(function() {
         $(this).populateNewznabSection();
     });
 
-    $('#editATorrentRssProvider').change(function(){
+    $('#editATorrentRssProvider').change(function() {
         $(this).populateTorrentRssSection();
     });
 
-    $(this).on('click', '.provider_enabler', function(){
+    $(this).on('click', '.provider_enabler', function() {
         $(this).refreshProviderList();
     });
 
-    $('#newznab_add').click(function(){
+    $('#newznab_add').click(function() {
 
         var selectedProvider = $('#editANewznabProvider :selected').val();
 
@@ -377,7 +377,7 @@ $(document).ready(function(){
 
     });
 
-    $('.newznab_delete').click(function(){
+    $('.newznab_delete').click(function() {
 
         var selectedProvider = $('#editANewznabProvider :selected').val();
 
@@ -385,7 +385,7 @@ $(document).ready(function(){
 
     });
 
-    $('#torrentrss_add').click(function(){
+    $('#torrentrss_add').click(function() {
         var selectedProvider = $('#editATorrentRssProvider :selected').val();
 
         var name = $('#torrentrss_name').val();
@@ -404,13 +404,13 @@ $(document).ready(function(){
         });
     });
 
-    $('.torrentrss_delete').on('click', function(){
+    $('.torrentrss_delete').on('click', function() {
         var selectedProvider = $('#editATorrentRssProvider :selected').val();
         $(this).deleteTorrentRssProvider(selectedProvider);
     });
 
 
-    $(this).on('change', "[class='providerDiv_tip'] input", function(){
+    $(this).on('change', "[class='providerDiv_tip'] input", function() {
         $('div .providerDiv ' + "[name=" + $(this).attr('name') + "]").replaceWith($(this).clone());
         $('div .providerDiv ' + "[newznab_name=" + $(this).attr('id') + "]").replaceWith($(this).clone());
     });
@@ -427,7 +427,7 @@ $(document).ready(function(){
 
     $('div .providerDiv ' + "[name=" + $(this).attr('name') + "]").empty().replaceWith($(this).clone())});
 
-    $(this).on('change', '.enabler', function(){
+    $(this).on('change', '.enabler', function() {
       if ($(this).is(':checked')) {
           $('.content_'+$(this).attr('id')).each( function() {
               $(this).show()
@@ -439,7 +439,7 @@ $(document).ready(function(){
       }
     });
 
-    $(".enabler").each(function(){
+    $(".enabler").each(function() {
         if (!$(this).is(':checked')) {
           $('.content_'+$(this).attr('id')).hide();
         } else {
@@ -458,7 +458,7 @@ $(document).ready(function(){
 
     }
 
-    $(this).on('change', '.seed_option', function(){
+    $(this).on('change', '.seed_option', function() {
 
         var provider_id = $(this).attr('id').split('_')[0];
 
