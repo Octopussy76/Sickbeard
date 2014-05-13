@@ -251,6 +251,7 @@ class FailedQueueItem(generic_queue.QueueItem):
 
     def execute(self):
         generic_queue.QueueItem.execute(self)
+        results = []
 
         for season, episode in self.segment.iteritems():
             epObj = self.show.getEpisode(season, episode)
@@ -263,18 +264,13 @@ class FailedQueueItem(generic_queue.QueueItem):
                 history.logFailed(self.show.tvdbid, season, episode, epObj.status, release, provider)
 
             failed_history.revertEpisode(self.show, season, episode)
-
-        for season, episode in self.segment.iteritems():
             epObj = self.show.getEpisode(season, episode)
 
-            if self.show.air_by_date:
-                results = search.findSeason(self.show, str(epObj.airdate)[:7])
-            else:
-                results = search.findSeason(self.show, season)
+            results.extend(search.findEpisode(epObj))
 
-            # download whatever we find
-            for curResult in results:
-                self.success = search.snatchEpisode(curResult)
-                time.sleep(5)
+        # download whatever we find
+        for curResult in results:
+            self.success = search.snatchEpisode(curResult)
+            time.sleep(5)
 
         self.finish()
