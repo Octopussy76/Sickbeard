@@ -30,6 +30,7 @@ date_presets = ('%Y-%m-%d',
                 '%y-%m-%d',
                 '%a, %y-%m-%d',
                 '%A, %y-%m-%d',
+                '%m/%d/%Y',
                 '%a, %m/%d/%Y',
                 '%A, %m/%d/%Y',
                 '%m/%d/%y',
@@ -77,11 +78,11 @@ date_presets = ('%Y-%m-%d',
                 '%B %d, %Y',
                 '%a, %B %d, %Y',
                 '%A, %B %d, %Y'
-                )
+)
 
 time_presets = ('%I:%M:%S %p',
                 '%H:%M:%S'
-                )
+)
 
 # helper class
 class static_or_instance(object):
@@ -91,14 +92,19 @@ class static_or_instance(object):
     def __get__(self, instance, owner):
         return functools.partial(self.func, instance)
 
+
 # subclass datetime.datetime to add function to display custom date and time formats
 class sbdatetime(datetime.datetime):
-
     has_locale = True
 
     # display Time in Sickbeard Format
     @static_or_instance
-    def sbftime(self, dt = None, show_seconds = False, t_preset = None):
+    def sbftime(self, dt=None, show_seconds=False, t_preset=None):
+
+        try:
+            locale.setlocale(locale.LC_TIME, '')
+        except:
+            pass
 
         try:
             if sbdatetime.has_locale:
@@ -132,7 +138,12 @@ class sbdatetime(datetime.datetime):
 
     # display Date in Sickbeard Format
     @static_or_instance
-    def sbfdate(self, dt = None, d_preset = None):
+    def sbfdate(self, dt=None, d_preset=None):
+
+        try:
+            locale.setlocale(locale.LC_TIME, '')
+        except:
+            pass
 
         strd = ''
         try:
@@ -152,7 +163,12 @@ class sbdatetime(datetime.datetime):
 
     # display Datetime in Sickbeard Format
     @static_or_instance
-    def sbfdatetime(self, dt = None, show_seconds = False, d_preset = None, t_preset = None):
+    def sbfdatetime(self, dt=None, show_seconds=False, d_preset=None, t_preset=None):
+
+        try:
+            locale.setlocale(locale.LC_TIME, '')
+        except:
+            pass
 
         strd = ''
         try:
