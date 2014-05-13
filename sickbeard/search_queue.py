@@ -261,12 +261,13 @@ class FailedQueueItem(generic_queue.QueueItem):
                 logger.log(u"Marking release as bad: " + release)
                 failed_history.markFailed(self.show, season, episode)
                 failed_history.logFailed(release)
-                history.logFailed(self.show.tvdbid, season, episode, epObj.status, release, provider)
 
             failed_history.revertEpisode(self.show, season, episode)
             epObj = self.show.getEpisode(season, episode)
 
-            results.extend(search.findEpisode(epObj))
+            result = search.findEpisode(epObj)
+            if result:
+                results = results.append(result)
 
         # download whatever we find
         for curResult in results:
