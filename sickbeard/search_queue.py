@@ -254,7 +254,6 @@ class FailedQueueItem(generic_queue.QueueItem):
         results = []
 
         for season, episode in self.segment.iteritems():
-            epObj = self.show.getEpisode(season, episode)
 
             (release, provider) = failed_history.findRelease(self.show, season, episode)
             if release:
@@ -267,7 +266,7 @@ class FailedQueueItem(generic_queue.QueueItem):
 
             result = search.findEpisode(epObj)
             if result:
-                results = results.append(result)
+                results.append(result)
 
         # download whatever we find
         for curResult in results:
