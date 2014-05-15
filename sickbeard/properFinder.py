@@ -18,6 +18,7 @@
 
 import datetime
 import operator
+import re
 
 import sickbeard
 
@@ -100,12 +101,21 @@ class ProperFinder():
 
         for curProper in sortedPropers:
 
+            is_proper = True
+
             # parse the file name
             try:
                 myParser = NameParser(False)
                 parse_result = myParser.parse(curProper.name)
             except InvalidNameException:
                 logger.log(u"Unable to parse the filename " + curProper.name + " into a valid episode", logger.DEBUG)
+                continue
+
+            if parse_result.extra_info:
+                is_proper = re.search('(^|[\. _-])(proper|repack)([\. _-]|$)', parse_result.extra_info, re.I) != None
+
+            if not is_proper:
+                logger.log(u"Ignoring " + curProper.name + " because it's seem a valid proper release", logger.DEBUG)
                 continue
 
             if not parse_result.episode_numbers:
